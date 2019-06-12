@@ -1,0 +1,3 @@
+http://www.sfit.com.cn/5_2_DocumentDown.htm
+MdApi().GetApiVersion()
+TraderApi().GetApiVersion()
