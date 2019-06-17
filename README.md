@@ -12,6 +12,11 @@ CTP版本：MdApi().GetApiVersion(), TraderApi().GetApiVersion()
 安装：`python setup.py install`或者复制build下的ctp目录到某个sys.path目录。
 # ctp_se_15
 
+linux 64位 python 2.7.16 64位,测试通过。
+windows 64位, python 2.7.16 64 位，测试通过。
+
+
+
 行情服务器测试程序：
 
 from ctp15 import ApiStruct, MdApi
