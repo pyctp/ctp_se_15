@@ -18,7 +18,9 @@ windows 64位, python 2.7.16 64 位，测试通过。
 如果linux下获取信息遇到权限问题，用下面命令：
 
 sudo chmod o+r  /sys/firmware/dmi/tables/smbios_entry_point
+
 sudo chmod o+r /dev/mem
+
 sudo chmod o+r /sys/firmware/dmi/tables/DMI
 
 即可。
