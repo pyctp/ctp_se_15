@@ -64,8 +64,14 @@ inst = [u'rb1910', u'SR909', u'i1909']
 
 def main():
     import json
+    import time
 
-    with open(r'ctp_simnow724.json') as f:
+    lHour = time.localtime().tm_hour
+    if lHour >= 9 and lHour < 16:
+        f = open(r'ctp_simnowstd.json')
+    else:
+        f = open(r'ctp_simnow724.json')
+
         acctinfo = json.load(f)
         broker_id = acctinfo['brokerID']
         investor_id = acctinfo['userID']
@@ -76,13 +82,18 @@ def main():
         appID = acctinfo['appID']
         authCode = acctinfo['authCode']
 
+        f.close()
+
     user = MyMdApi(instruments=inst, broker_id=broker_id, investor_id=investor_id, passwd=password)
 
-    user.Create("marketflow")
+    user.Create(r"./tmp/"+"marketflow")
     user.RegisterFront(mdserver)  # simnow std md server
 
     user.Init()
-    user.subscribe_market_data(['j1909','i1909', 'IF1907', 'IC1907', 'IH1907', 'MA909'])
+    time.sleep(3)
+    user.subscribe_market_data(['j1909','i1909', 'IF1907', 'IC1907', 'IH1907', 'MA909','TA909'])
+    time.sleep(4)
+    
     while True:
         time.sleep(5)
     # user.Join()

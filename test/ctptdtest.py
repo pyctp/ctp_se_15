@@ -7,6 +7,7 @@ import copy
 import datetime
 info = []
 q_server_info = Queue.Queue()
+q_positions = Queue.Queue()
 
 class Trader(TraderApi):
 
@@ -143,6 +144,24 @@ class Trader(TraderApi):
         self.request_id += 1
         return self.request_id
 
+
+    def QrySettlementInfo(self):
+        """请求查询投资者结算结果"""
+        req = ApiStruct.QrySettlementInfo()
+        req.BrokerID = self.broker_id
+        req.InvestorID = self.investor_id
+        req.TradingDay = self.GetTradingDay()
+        p = self.ReqQrySettlementInfo(req, self.request_id)
+        print(p)
+
+        # return 0
+    def OnRspQrySettlementInfo(self, pSettlementInfo, pRspInfo, nRequestID, bIsLast):
+        """请求查询投资者结算结果响应"""
+        print(u'请求查询投资者结算结果响应...')
+        if bIsLast:
+            print(pSettlementInfo)
+
+
     def OnRspQryInvestor(self, pInvestor, pRspInfo, nRequestID, bIsLast):
         print(pInvestor, pRspInfo)
         print pInvestor.InvestorName.decode('gbk'), pInvestor.Address.decode('gbk')
@@ -230,7 +249,7 @@ class Trader(TraderApi):
 
     def qryPosition(self, InstrumentID=''):
 
-        self.requestid += 1
+        self.request_id += 1
 
         if InstrumentID:
             req = ApiStruct.QryInvestorPosition(BrokerID=self.broker_id, InvestorID=self.investor_id,
@@ -238,7 +257,7 @@ class Trader(TraderApi):
         else:
             req = ApiStruct.QryInvestorPosition(BrokerID=self.broker_id, InvestorID=self.investor_id)
 
-        self.ReqQryInvestorPosition(req, self.requestid)
+        self.ReqQryInvestorPosition(req, self.request_id)
 
     def OnRspQryInvestorPosition(self, pInvestorPosition, pRspInfo, nRequestID, bIsLast):
         # print pInvestorPosition
@@ -333,8 +352,7 @@ class Trader(TraderApi):
             查询持仓明细回报, 得到每一次成交的持仓,其中若已经平仓,则持量为0,平仓量>=1
             必须忽略
         '''
-        print
-        str(position_detail)
+        print str(position_detail)
         self.check_qry_commands()
 
     def rsp_qry_order(self, sorder):
@@ -354,7 +372,8 @@ class Trader(TraderApi):
 def main():
     import json
 
-    with open(r'ctp_simnow724.json') as f:
+    # with open(r'ctp_simnow724.json') as f:
+    with open(r'ctp_simnowstd.json') as f:
         acctinfo = json.load(f)
         broker_id = acctinfo['brokerID']
         investor_id = acctinfo['userID']
@@ -366,13 +385,9 @@ def main():
         productinfo = acctinfo['productinfo']
 
 
-
-
-
-
     td = Trader(broker_id=broker_id, investor_id=investor_id, password=password, appid=appID, authcode=authCode, productinfo = productinfo)
 
-    td.Create('traderflow')
+    td.Create(r'./tmp/'+'traderflow')
     td.RegisterFront(tdserver)
     td.SubscribePrivateTopic(2) # 只传送登录后的流内容
     td.SubscribePrivateTopic(2) # 只传送登录后的流内容
@@ -381,15 +396,20 @@ def main():
 
     print(td.GetTradingDay())
 
-
-
-
     while True:
+
         if info:
             for i in info:
                 print(i)
 
         time.sleep(5)
+        td.qryPosition()
+        td.QrySettlementInfo()
+        if q_positions:
+            pos = q_positions.get()
+            print pos
+
+
 
 if __name__ == "__main__":
     main()
