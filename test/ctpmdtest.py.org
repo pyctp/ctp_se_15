@@ -1,0 +1,103 @@
+#coding:utf-8
+from ctp15 import ApiStruct, MdApi
+import time
+import traceback
+import copy
+
+ticks = []
+
+class MyMdApi(MdApi):
+    def __init__(self, instruments, broker_id, investor_id, passwd, *args, **kwargs):
+        self.requestid = 0
+        self.instruments = instruments
+        self.broker_id = broker_id
+        self.investor_id = investor_id
+        self.passwd = passwd
+
+
+    def OnRspError(self, info, RequestId, IsLast):
+        print " Error"
+        self.isErrorRspInfo(info)
+
+    def isErrorRspInfo(self, info):
+        if info.ErrorID != 0:
+            print "ErrorID=", info.ErrorID, ", ErrorMsg=", info.ErrorMsg
+        return info.ErrorID != 0
+
+    def OnFrontDisConnected(self, reason):
+        print "onFrontDisConnected:", reason
+
+    def OnHeartBeatWarning(self, time):
+        print "onHeartBeatWarning", time
+
+    def OnFrontConnected(self):
+        print "OnFrontConnected:"
+        self.user_login(self.broker_id, self.investor_id, self.passwd)
+
+    def user_login(self, broker_id, investor_id, passwd):
+        req = ApiStruct.ReqUserLogin(BrokerID=broker_id, UserID=investor_id, Password=passwd)
+
+        self.requestid += 1
+        r = self.ReqUserLogin(req, self.requestid)
+
+    def OnRspUserLogin(self, userlogin, info, rid, is_last):
+        print "OnRspUserLogin", is_last, info
+        if is_last and not self.isErrorRspInfo(info):
+            print "get today's trading day:", repr(self.GetTradingDay())
+            self.subscribe_market_data(self.instruments)
+
+    def subscribe_market_data(self, instruments):
+        self.SubscribeMarketData(instruments)
+
+    def OnRspSubMarketData(self, spec_instrument, info, requestid, islast):
+       print "OnRspSubMarketData", spec_instrument
+
+    # def OnRspUnSubMarketData(self, spec_instrument, info, requestid, islast):
+    #    print "OnRspUnSubMarketData"
+
+    def OnRtnDepthMarketData(self, depth_market_data):
+        tick = copy.deepcopy(depth_market_data)
+        print tick
+        ticks.append(tick)
+
+inst = [u'rb1910', u'SR909', u'i1909']
+
+def main():
+    import json
+    import time
+
+    lHour = time.localtime().tm_hour
+    if lHour >= 9 and lHour < 16:
+        f = open(r'ctp_simnowstd.json')
+    else:
+        f = open(r'ctp_simnow724.json')
+
+        acctinfo = json.load(f)
+        broker_id = acctinfo['brokerID']
+        investor_id = acctinfo['userID']
+        password = acctinfo['password']
+        mdserver = acctinfo['mdAddress']
+        tdserver = acctinfo['tdAddress']
+
+        appID = acctinfo['appID']
+        authCode = acctinfo['authCode']
+
+        f.close()
+
+    user = MyMdApi(instruments=inst, broker_id=broker_id, investor_id=investor_id, passwd=password)
+
+    user.Create(r"./tmp/"+"marketflow")
+    user.RegisterFront(mdserver)  # simnow std md server
+
+    user.Init()
+    time.sleep(3)
+    user.subscribe_market_data(['j1909','i1909', 'IF1907', 'IC1907', 'IH1907', 'MA909','TA909'])
+    time.sleep(4)
+
+    while True:
+        time.sleep(5)
+    # user.Join()
+
+
+if __name__ == '__main__':
+    main()

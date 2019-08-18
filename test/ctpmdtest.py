@@ -3,7 +3,11 @@ from ctp15 import ApiStruct, MdApi
 import time
 import traceback
 import copy
-from queue import Queue
+try:
+	from queue import Queue
+except:
+	from Queue import Queue
+	
 ticks = []
 tickqueue = Queue()
 
