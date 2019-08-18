@@ -2,7 +2,7 @@
     "brokerID": "9999", 
     "mdAddress": "tcp://180.168.146.187:10131", 
     "tdAddress": "tcp://180.168.146.187:10130", 
-    "userID": "086038",
+    "userID": "142341",
     "password": "ftp123",
     "appID": "simnow_client_test",
     "authCode": "0000000000000000",

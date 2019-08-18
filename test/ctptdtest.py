@@ -371,18 +371,23 @@ class Trader(TraderApi):
 
 def main():
     import json
-
+    from ctpmdtest import workDay
     # with open(r'ctp_simnow724.json') as f:
-    with open(r'ctp_simnowstd.json') as f:
-        acctinfo = json.load(f)
-        broker_id = acctinfo['brokerID']
-        investor_id = acctinfo['userID']
-        password = acctinfo['password']
-        mdsever = acctinfo['mdAddress']
-        tdserver = acctinfo['tdAddress']
-        appID = acctinfo['appID']
-        authCode = acctinfo['authCode']
-        productinfo = acctinfo['productinfo']
+
+    if workDay():
+        f = open(r'ctp_simnowstd.json')
+    else:
+        f = open(r'ctp_simnow724.json')
+
+    acctinfo = json.load(f)
+    broker_id = acctinfo['brokerID']
+    investor_id = acctinfo['userID']
+    password = acctinfo['password']
+    mdsever = acctinfo['mdAddress']
+    tdserver = acctinfo['tdAddress']
+    appID = acctinfo['appID']
+    authCode = acctinfo['authCode']
+    productinfo = acctinfo['productinfo']
 
 
     td = Trader(broker_id=broker_id, investor_id=investor_id, password=password, appid=appID, authcode=authCode, productinfo = productinfo)
