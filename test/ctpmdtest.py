@@ -63,15 +63,11 @@ class MyMdApi(MdApi):
     def OnRtnDepthMarketData(self, depth_market_data):
         tick = copy.deepcopy(depth_market_data)
 
-        print tick.UpdateTime,tick.InstrumentID, tick.Volume/tick.PreOpenInterest
-        print tick
-        ticks.append(tick)
+        # print tick.UpdateTime,tick.InstrumentID, tick.Volume, tick.PreOpenInterest
+        # print tick
+        # ticks.append(tick)
         tickqueue.put(tick)
         
-
-
-
-inst = [u'rb1910', u'SR909', u'i1909']
 
 #判断是否为工作日,工作日返回1，非工作日返回0
 def workDay():
@@ -92,7 +88,7 @@ def workDay():
 def main():
     import json
     import time
-
+    from getInstrumentsFromFile import get_live_instruments
     from data_sewing_machine import sewing_data_to_file_and_depositary
 
     if workDay():
@@ -111,24 +107,29 @@ def main():
     authCode = acctinfo['authCode']
 
     f.close()
-
-    user = MyMdApi(instruments=inst, broker_id=broker_id, investor_id=investor_id, passwd=password)
+    live_insts = get_live_instruments()
+    user = MyMdApi(instruments=live_insts, broker_id=broker_id, investor_id=investor_id, passwd=password)
 
     user.Create(r"./tmp/"+"marketflow")
     user.RegisterFront(mdserver)  # simnow std md server
 
     user.Init()
     time.sleep(3)
-    user.subscribe_market_data(['j1909','i1909', 'IF1907', 'IC1907', 'IH1907', 'MA909','TA909','ni1908'])
-    time.sleep(4)
-    
+
+    # live_insts = get_live_instruments()
+    # user.subscribe_market_data(live_insts)
+
+    # time.sleep(4)
+    numoftick = 0
     while True:
         if not tickqueue.empty():
             tick = tickqueue.get()
             sewing_data_to_file_and_depositary(tick)
+            numoftick +=1
+            print('tick processed:', numoftick)
 
-        time.sleep(0.5)
-    # user.Join()
+        else:
+            time.sleep(0.5)
 
 
 if __name__ == '__main__':

@@ -8,7 +8,8 @@ import datetime
 info = []
 q_server_info = Queue.Queue()
 q_positions = Queue.Queue()
-
+q_instruments = Queue.Queue()
+instruments = []
 class Trader(TraderApi):
 
     def __init__(self, broker_id, investor_id, password, appid, authcode, productinfo, request_id=1):
@@ -289,13 +290,19 @@ class Trader(TraderApi):
         r = self.trader.ReqQryInstrumentMarginRate(req, self.inc_request_id())
         logging.info(u'A:查询保证金率, 函数发出返回值:%s' % r)
 
-    def fetch_instrument(self, instrument_id):
-        req = ApiStruct.QryInstrument(
-            InstrumentID=instrument_id,
-        )
+    def fetch_all_instruments(self):
+        # req = ApiStruct.QryInstrument(InstrumentID=instrument_id)
+        req = ApiStruct.QryInstrument()
         time.sleep(1)
-        r = self.trader.ReqQryInstrument(req, self.inc_request_id())
-        logging.info(u'A:查询合约, 函数发出返回值:%s' % r)
+        r = self.ReqQryInstrument(req, self.inc_request_id())
+        print(u'A:查询合约, 函数发出返回值:%s' % r)
+
+    def fetch_instrument(self, instrument_id):
+        req = ApiStruct.QryInstrument(InstrumentID=instrument_id)
+        # req = ApiStruct.QryInstrument()
+        time.sleep(1)
+        r = self.ReqQryInstrument(req, self.inc_request_id())
+        print(u'A:查询合约, 函数发出返回值:%s' % r)
 
     def rsp_qry_position(self, position):
         '''
@@ -339,11 +346,13 @@ class Trader(TraderApi):
             获得合约数量乘数.
             这里的保证金率应该是和期货公司无关，所以不能使用
         '''
+
         if pinstrument.InstrumentID not in self.instruments:
             logging.warning(u'A_RQI:收到未监控的合约查询:%s' % (pinstrument.InstrumentID))
             return
         self.instruments[pinstrument.InstrumentID].multiple = pinstrument.VolumeMultiple
         self.instruments[pinstrument.InstrumentID].tick_base = int(pinstrument.PriceTick * 10 + 0.1)
+        print(pinstrument)
         # print 'tick_base = %s' % (pinstrument.PriceTick,)
         self.check_qry_commands()
 
@@ -368,8 +377,25 @@ class Trader(TraderApi):
             可以忽略
         '''
         self.check_qry_commands()
+    # def ReqQryInstrument(self, pQryInstrument, nRequestID):
+    #     req=ApiStruct.QryInstrument()
+    #     self.ReqQryInstrument(req, self.inc_request_id())
+    #     print('query instrument.')
+    #
+    #     return 0
 
+    def OnRspQryInstrument(self, pInstrument, pRspInfo, nRequestID, bIsLast):
+        # if bIsLast:
+        instruments.append(copy.deepcopy(pInstrument))
+        q_instruments.put(copy.deepcopy(pInstrument))
+        # print(pInstrument)
+        print(pInstrument.InstrumentName.decode('gbk'))
+        print(pInstrument.InstrumentID)
+        if bIsLast:
+            print('done...')
 def main():
+    import cPickle as pickle
+    import shelve
     import json
     from ctpmdtest import workDay
     # with open(r'ctp_simnow724.json') as f:
@@ -398,21 +424,52 @@ def main():
     td.SubscribePrivateTopic(2) # 只传送登录后的流内容
 
     td.Init()
+    time.sleep(3)
 
     print(td.GetTradingDay())
 
     while True:
 
-        if info:
-            for i in info:
-                print(i)
-
+        # if info:
+        #     for i in info:
+        #         print(i)
+        td.fetch_all_instruments()
+        print(len(instruments))
         time.sleep(5)
-        td.qryPosition()
-        td.QrySettlementInfo()
-        if q_positions:
-            pos = q_positions.get()
-            print pos
+        instdb = shelve.open('instruments.slv')
+        while not q_instruments.empty():
+            inst = q_instruments.get()
+            print(inst)
+            j = pickle.dumps(inst)
+            instdb[inst.InstrumentID] = j
+
+
+            # instfile.write(str(inst)+'\n')
+
+            print(inst.InstrumentName.decode('gbk'))
+            print(inst.OptionsType.decode('gbk'))
+            # print(inst.UnderlyingInstrID.decode('gbk'))
+
+
+            '''
+            Instrument(InstrumentID='i2101', ExchangeID='DCE', InstrumentName='\xcc\xfa\xbf\xf3\xca\xaf2101',
+                       ExchangeInstID='i2101', ProductID='i', ProductClass='1', DeliveryYear=2021, DeliveryMonth=1,
+                       MaxMarketOrderVolume=1000, MinMarketOrderVolume=1, MaxLimitOrderVolume=1000,
+                       MinLimitOrderVolume=1, VolumeMultiple=100, PriceTick=0.5, CreateDate='20191216',
+                       OpenDate='20200116', ExpireDate='20210115', StartDelivDate='20210118', EndDelivDate='20210120',
+                       InstLifePhase='1', IsTrading=1, PositionType='2', PositionDateType='2', LongMarginRatio=0.05,
+                       ShortMarginRatio=0.05, MaxMarginSideAlgorithm='0', UnderlyingInstrID='', StrikePrice=0.0,
+                       OptionsType='\x00', UnderlyingMultiple=0.0, CombinationType='0')
+            '''
+        instdb.close()
+        print('instruments saved....')
+
+
+        # td.qryPosition()
+        # td.QrySettlementInfo()
+        # if q_positions:
+        #     pos = q_positions.get()
+        #     print pos
 
 
 

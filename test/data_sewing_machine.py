@@ -256,17 +256,17 @@ config = incept_config()
 
 def sewing_data_to_file_and_depositary(depth_market_data=None):
 
-    for key in ['InstrumentID', 'LastPrice', 'ActionDay', 'UpdateTime']:
-        if not hasattr(depth_market_data, key):
-            return
+    # for key in ['InstrumentID', 'LastPrice', 'ActionDay', 'UpdateTime']:
+    #     if not hasattr(depth_market_data, key):
+    #         return
 
     instrument_id = depth_market_data.InstrumentID
     contract_code = contract_code_pattern.match(instrument_id).group()
 
-    workdays = TradingPeriod.get_workdays(begin=config['begin'], end='2019-12-31')
-    workdays_exchange_trading_period_by_ts = \
-        TradingPeriod.get_workdays_exchange_trading_period(
-            _workdays=workdays, exchange_trading_period=EXCHANGE_TRADING_PERIOD)
+    # workdays = TradingPeriod.get_workdays(begin=config['begin'], end='2019-12-31')
+    # workdays_exchange_trading_period_by_ts = \
+    #     TradingPeriod.get_workdays_exchange_trading_period(
+    #         _workdays=workdays, exchange_trading_period=EXCHANGE_TRADING_PERIOD)
 
     date = '-'.join([depth_market_data.ActionDay[:4], depth_market_data.ActionDay[4:6],
                      depth_market_data.ActionDay[6:]])
@@ -321,62 +321,62 @@ def sewing_data_to_file_and_depositary(depth_market_data=None):
 
             DEPOSITARY_OF_KLINE[instrument_id][k]['k_line_pump'].str_k_line = None
 
-            if 'MA' not in DEPOSITARY_OF_KLINE[instrument_id][k]:
-                DEPOSITARY_OF_KLINE[instrument_id][k]['MA'] = dict()
+            # if 'MA' not in DEPOSITARY_OF_KLINE[instrument_id][k]:
+            #     DEPOSITARY_OF_KLINE[instrument_id][k]['MA'] = dict()
+            #
+            #     for step in config['ma_steps']:
+            #         str_step = step.__str__()
+            #         if str_step not in DEPOSITARY_OF_KLINE[instrument_id][k]['MA']:
+            #             DEPOSITARY_OF_KLINE[instrument_id][k]['MA'][str_step] = dict()
+            #             DEPOSITARY_OF_KLINE[instrument_id][k]['MA'][str_step]['pump'] = MAPump(step=step)
+            #             DEPOSITARY_OF_KLINE[instrument_id][k]['MA'][str_step]['data'] = list()
 
-                for step in config['ma_steps']:
-                    str_step = step.__str__()
-                    if str_step not in DEPOSITARY_OF_KLINE[instrument_id][k]['MA']:
-                        DEPOSITARY_OF_KLINE[instrument_id][k]['MA'][str_step] = dict()
-                        DEPOSITARY_OF_KLINE[instrument_id][k]['MA'][str_step]['pump'] = MAPump(step=step)
-                        DEPOSITARY_OF_KLINE[instrument_id][k]['MA'][str_step]['data'] = list()
-
-            for ma_k, ma_v in DEPOSITARY_OF_KLINE[instrument_id][k]['MA'].items():
-                ma_ret = DEPOSITARY_OF_KLINE[instrument_id][k]['MA'][ma_k]['pump'].process_data(json_k_line)
-                DEPOSITARY_OF_KLINE[instrument_id][k]['MA'][ma_k]['data'].append(ma_ret)
-
-            if 'MAC' not in DEPOSITARY_OF_KLINE[instrument_id][k]:
-                DEPOSITARY_OF_KLINE[instrument_id][k]['MAC'] = dict()
-
-                for mac in config['macs']:
-                    if mac not in DEPOSITARY_OF_KLINE[instrument_id][k]['MAC']:
-                        DEPOSITARY_OF_KLINE[instrument_id][k]['MAC'][mac] = dict()
-                        DEPOSITARY_OF_KLINE[instrument_id][k]['MAC'][mac]['data'] = list()
-
-            for mac_k, mac_v in DEPOSITARY_OF_KLINE[instrument_id][k]['MAC'].items():
-                mac = mac_k.lower().split('c')
-
-                data = {
-                    'date_time': DEPOSITARY_OF_KLINE[instrument_id][k]['MA'][mac[0]]['data'][-1]['date_time'],
-                    'up_crossing': None,
-                    'a': DEPOSITARY_OF_KLINE[instrument_id][k]['MA'][mac[0]]['data'][-1]['avg'],
-                    'b': DEPOSITARY_OF_KLINE[instrument_id][k]['MA'][mac[1]]['data'][-1]['avg']
-                }
-
-                last_mac = {
-                    'up_crossing': data['a'] >= data['b']
-                }
-
-                if DEPOSITARY_OF_KLINE[instrument_id][k]['MAC'][mac_k]['data'].__len__() > 0:
-                    last_mac = DEPOSITARY_OF_KLINE[instrument_id][k]['MAC'][mac_k]['data'][-1]
-
-                if data['a'] > data['b']:
-
-                    data['up_crossing'] = True
-
-                elif data['a'] < data['b']:
-
-                    data['up_crossing'] = False
-
-                else:
-                    data['up_crossing'] = None
-
-                if DEPOSITARY_OF_KLINE[instrument_id][k]['MAC'][mac_k]['data'].__len__() > 0 and \
-                        last_mac['up_crossing'] == data['up_crossing']:
-                    data['up_crossing'] = None
-
-                DEPOSITARY_OF_KLINE[instrument_id][k]['MAC'][mac_k]['data'].append(data)
-                q_macs.put({'instrument_id': instrument_id, 'granularity': k, 'mac_k': mac_k, 'data': data})
+            # for ma_k, ma_v in DEPOSITARY_OF_KLINE[instrument_id][k]['MA'].items():
+            #     ma_ret = DEPOSITARY_OF_KLINE[instrument_id][k]['MA'][ma_k]['pump'].process_data(json_k_line)
+            #     DEPOSITARY_OF_KLINE[instrument_id][k]['MA'][ma_k]['data'].append(ma_ret)
+            #
+            # if 'MAC' not in DEPOSITARY_OF_KLINE[instrument_id][k]:
+            #     DEPOSITARY_OF_KLINE[instrument_id][k]['MAC'] = dict()
+            #
+            #     for mac in config['macs']:
+            #         if mac not in DEPOSITARY_OF_KLINE[instrument_id][k]['MAC']:
+            #             DEPOSITARY_OF_KLINE[instrument_id][k]['MAC'][mac] = dict()
+            #             DEPOSITARY_OF_KLINE[instrument_id][k]['MAC'][mac]['data'] = list()
+            #
+            # for mac_k, mac_v in DEPOSITARY_OF_KLINE[instrument_id][k]['MAC'].items():
+            #     mac = mac_k.lower().split('c')
+            #
+            #     data = {
+            #         'date_time': DEPOSITARY_OF_KLINE[instrument_id][k]['MA'][mac[0]]['data'][-1]['date_time'],
+            #         'up_crossing': None,
+            #         'a': DEPOSITARY_OF_KLINE[instrument_id][k]['MA'][mac[0]]['data'][-1]['avg'],
+            #         'b': DEPOSITARY_OF_KLINE[instrument_id][k]['MA'][mac[1]]['data'][-1]['avg']
+            #     }
+            #
+            #     last_mac = {
+            #         'up_crossing': data['a'] >= data['b']
+            #     }
+            #
+            #     if DEPOSITARY_OF_KLINE[instrument_id][k]['MAC'][mac_k]['data'].__len__() > 0:
+            #         last_mac = DEPOSITARY_OF_KLINE[instrument_id][k]['MAC'][mac_k]['data'][-1]
+            #
+            #     if data['a'] > data['b']:
+            #
+            #         data['up_crossing'] = True
+            #
+            #     elif data['a'] < data['b']:
+            #
+            #         data['up_crossing'] = False
+            #
+            #     else:
+            #         data['up_crossing'] = None
+            #
+            #     if DEPOSITARY_OF_KLINE[instrument_id][k]['MAC'][mac_k]['data'].__len__() > 0 and \
+            #             last_mac['up_crossing'] == data['up_crossing']:
+            #         data['up_crossing'] = None
+            #
+            #     DEPOSITARY_OF_KLINE[instrument_id][k]['MAC'][mac_k]['data'].append(data)
+            #     q_macs.put({'instrument_id': instrument_id, 'granularity': k, 'mac_k': mac_k, 'data': data})
 
 
 def get_k_line_column(instrument_id=None, interval=None, ohlc='high', depth=0):
