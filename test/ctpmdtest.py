@@ -7,7 +7,7 @@ try:
 	from queue import Queue
 except:
 	from Queue import Queue
-	
+
 ticks = []
 tickqueue = Queue()
 
@@ -67,12 +67,11 @@ class MyMdApi(MdApi):
         # print tick
         # ticks.append(tick)
         tickqueue.put(tick)
-        
 
 #判断是否为工作日,工作日返回1，非工作日返回0
 def workDay():
     import datetime
-    workTime=['09:00:00','16:00:00']
+    workTime=['08:30:00','16:00:00']
     dayOfWeek = datetime.datetime.now().weekday()
     #dayOfWeek = datetime.today().weekday()
     beginWork=datetime.datetime.now().strftime("%Y-%m-%d")+' '+workTime[0]
@@ -92,9 +91,9 @@ def main():
     from data_sewing_machine import sewing_data_to_file_and_depositary
 
     if workDay():
-        f = open(r'ctp_simnowstd.json')
+        f = open(r'./conf/ctp_simnowstd.json')
     else:
-        f = open(r'ctp_simnow724.json')
+        f = open(r'./conf/ctp_simnow724.json')
 
     acctinfo = json.load(f)
     broker_id = acctinfo['brokerID']
