@@ -1944,18 +1944,21 @@ class ReqAuthenticate(BaseStruct): #客户端认证请求
         self.UserID = '' #用户代码, char[16]
         self.UserProductInfo = 'ProductInfo' #用户端产品信息, char[11]
         self.AuthCode = '' #认证码, char[17]
+        self.AppID = '' # AppID, char[30]
 
 class RspAuthenticate(BaseStruct): #客户端认证响应
     def __init__(self, BrokerID='', UserID='', UserProductInfo=''):
         self.BrokerID = '' #经纪公司代码, char[11]
         self.UserID = '' #用户代码, char[16]
         self.UserProductInfo = 'ProductInfo' #用户端产品信息, char[11]
+        self.AppID = ''
 
 class AuthenticationInfo(BaseStruct): #客户端认证信息
     def __init__(self, BrokerID='', UserID='', UserProductInfo='', AuthInfo='', IsResult=0):
         self.BrokerID = '' #经纪公司代码, char[11]
         self.UserID = '' #用户代码, char[16]
         self.UserProductInfo = 'ProductInfo' #用户端产品信息, char[11]
+        self.AppID = ''
         self.AuthInfo = '' #认证信息, char[129]
         self.IsResult = 'Bool' #是否为认证结果, int
 

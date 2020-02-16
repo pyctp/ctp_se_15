@@ -394,12 +394,12 @@ class Trader(TraderApi):
         print(pInstrument.InstrumentID)
         if bIsLast:
             print('done...')
-def main():
+def generate_all_live_instruments():
+
     import cPickle as pickle
     import shelve
     import json
     from ctpmdtest import workDay
-    # with open(r'ctp_simnow724.json') as f:
 
     if workDay():
         f = open(r'ctp_simnowstd.json')
@@ -425,15 +425,12 @@ def main():
     td.SubscribePrivateTopic(2) # 只传送登录后的流内容
 
     td.Init()
-    time.sleep(3)
+    time.sleep(10)
 
     print('当前交易日:'+td.GetTradingDay())
 
     while True:
 
-        # if info:
-        #     for i in info:
-        #         print(i)
         td.fetch_all_instruments()
         print(len(instruments))
         time.sleep(5)
@@ -449,7 +446,6 @@ def main():
 
             print(inst.InstrumentName.decode('gbk'))
             print(inst.OptionsType.decode('gbk'))
-            # print(inst.UnderlyingInstrID.decode('gbk'))
 
 
             '''
@@ -468,13 +464,6 @@ def main():
 
 
 
-        # td.qryPosition()
-        # td.QrySettlementInfo()
-        # if q_positions:
-        #     pos = q_positions.get()
-        #     print pos
-
-
-
 if __name__ == "__main__":
-    main()
+    generate_all_live_instruments()
+

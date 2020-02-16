@@ -126,7 +126,7 @@ def main():
             tick = tickqueue.get()
             sewing_data_to_file_and_depositary(tick)
             numoftick +=1
-            print('tick processed:', numoftick)
+            print('tick processed:', tick.UpdateTime, tick.InstrumentID, numoftick)
 
         else:
             time.sleep(0.5)
