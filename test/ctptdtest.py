@@ -1,10 +1,12 @@
-#coding:utf-8
+# coding:utf-8
 from ctp15 import TraderApi, ApiStruct
 
 import queue
 import time
 import copy
 import datetime
+import types
+
 info = []
 q_server_info = queue.Queue()
 q_positions = queue.Queue()
@@ -12,13 +14,46 @@ q_instruments = queue.Queue()
 instruments = []
 
 
+def to_dict(dumyself):
+    result = {}
+    for a in dir(dumyself):
+
+        # filter inner field by fieldname
+        if a.startswith('_') or a == 'metadata':
+            continue
+
+        v = getattr(dumyself, a)
+
+        if isinstance(v, bytes):
+            v = v.decode('gbk')
+
+        # filter inner field by value type
+        if callable(v):
+            continue
+
+        # if type(v) not in (types.NoneType, types.IntType, types.LongType, types.StringType, types.UnicodeType):
+        #     continue
+
+        result[a] = getattr(dumyself, a)
+
+    return result
+
+
+#
+# ————————————————
+# 版权声明：本文为CSDN博主「little_stupid_child」的原创文章，遵循
+# CC
+# 4.0
+# BY - SA
+# 版权协议，转载请附上原文出处链接及本声明。
+# 原文链接：https: // blog.csdn.net / little_stupid_child / article / details / 80975237
 
 def to_str(bytes_or_str):
     if isinstance(bytes_or_str, bytes):
         value = bytes_or_str.decode('utf-8')
     else:
         value = bytes_or_str
-    return value    #Instance of str
+    return value  # Instance of str
 
 
 def to_bytes(bytes_or_str):
@@ -26,7 +61,7 @@ def to_bytes(bytes_or_str):
         value = bytes_or_str.encode('utf-8')
     else:
         value = bytes_or_str
-    return value    #Instance of bytes
+    return value  # Instance of bytes
 
 
 class Trader(TraderApi):
@@ -59,7 +94,7 @@ class Trader(TraderApi):
         """
         if info.ErrorID != 0:
             print(('request_id=%s ErrorID=%d, ErrorMsg=%s',
-                  request_id, info.ErrorID, info.ErrorMsg.decode('gbk')))
+                   request_id, info.ErrorID, info.ErrorMsg.decode('gbk')))
         return info.ErrorID != 0
 
     def OnHeartBeatWarning(self, nTimeLapse):
@@ -74,13 +109,13 @@ class Trader(TraderApi):
     def OnFrontConnected(self):
         print('Front connected....')
         req = ApiStruct.ReqAuthenticate(BrokerID=self.broker_id,
-                                             UserID=self.investor_id,
-                                        UserProductInfo =self.productinfo,
-                                             # Password=self.password,
-                                                AppID=self.appid,
-                                                AuthCode=self.authcode)
+                                        UserID=self.investor_id,
+                                        UserProductInfo=self.productinfo,
+                                        # Password=self.password,
+                                        AppID=self.appid,
+                                        AuthCode=self.authcode)
 
-        r=self.ReqAuthenticate(req, self.inc_request_id())
+        r = self.ReqAuthenticate(req, self.inc_request_id())
         print(r)
         print('Req Authenticate finished..申请客户端认证提交完成.')
         time.sleep(3)
@@ -90,20 +125,18 @@ class Trader(TraderApi):
         #                                      Password=self.password)
         # self.ReqUserLogin(req, self.request_id)
         # print("trader on front connection")
+
     def OnRspAuthenticate(self, pRspAuthenticateField, pRspInfo, nRequestID, bIsLast):
         # print(pRspAuthenticateField.AppType)
-
 
         info.append(copy.deepcopy(pRspAuthenticateField))
         print('client authenticate done. Req User login...客户端认证完成，请求用户登录.')
         time.sleep(3)
         req = ApiStruct.ReqUserLogin(BrokerID=self.broker_id,
-                                             UserID=self.investor_id,
-                                             Password=self.password)
-        r=self.ReqUserLogin(req, self.inc_request_id())
+                                     UserID=self.investor_id,
+                                     Password=self.password)
+        r = self.ReqUserLogin(req, self.inc_request_id())
         print(r)
-
-
 
     def OnRspUserLogin(self, pRspUserLogin, pRspInfo, nRequestID, bIsLast):
 
@@ -130,8 +163,6 @@ class Trader(TraderApi):
 
         else:
             print('something wrong, connect failed....')
-
-
 
         #
         #
@@ -164,7 +195,6 @@ class Trader(TraderApi):
         self.request_id += 1
         return self.request_id
 
-
     def QrySettlementInfo(self):
         """请求查询投资者结算结果"""
         req = ApiStruct.QrySettlementInfo()
@@ -175,12 +205,12 @@ class Trader(TraderApi):
         print(p)
 
         # return 0
+
     def OnRspQrySettlementInfo(self, pSettlementInfo, pRspInfo, nRequestID, bIsLast):
         """请求查询投资者结算结果响应"""
         print('请求查询投资者结算结果响应...')
         if bIsLast:
             print(pSettlementInfo)
-
 
     def OnRspQryInvestor(self, pInvestor, pRspInfo, nRequestID, bIsLast):
         print((pInvestor, pRspInfo))
@@ -396,6 +426,7 @@ class Trader(TraderApi):
             可以忽略
         '''
         self.check_qry_commands()
+
     # def ReqQryInstrument(self, pQryInstrument, nRequestID):
     #     req=ApiStruct.QryInstrument()
     #     self.ReqQryInstrument(req, self.inc_request_id())
@@ -412,12 +443,36 @@ class Trader(TraderApi):
         print((pInstrument.InstrumentID))
         if bIsLast:
             print('done...')
+
+
 def main():
     import pickle as pickle
     import shelve
+    from pprint import pprint
     import json
     from ctpmdtest import workDay
     # with open(r'ctp_simnow724.json') as f:
+
+    class MyEncoder(json.JSONEncoder):
+
+        def default(self, obj):
+            """
+            只要检查到了是bytes类型的数据就把它转为str类型
+            :param obj:
+            :return:
+            """
+            if isinstance(obj, bytes):
+                return str(obj, encoding='gbk')
+            return json.JSONEncoder.default(self, obj)
+
+    # ————————————————
+    # 版权声明：本文为CSDN博主「dou_being」的原创文章，遵循
+    # CC
+    # 4.0
+    # BY - SA
+    # 版权协议，转载请附上原文出处链接及本声明。
+    # 原文链接：https: // blog.csdn.net / dou_being / article / details / 82290588
+
 
     if workDay():
         f = open(r'ctp_simnowstd.json')
@@ -442,38 +497,45 @@ def main():
     productinfo = to_bytes(productinfo)
     investor_id = to_bytes(investor_id)
 
-    td = Trader(broker_id=broker_id, investor_id=investor_id, password=password, appid=appID, authcode=authCode, productinfo = productinfo)
+    td = Trader(broker_id=broker_id, investor_id=investor_id, password=password, appid=appID, authcode=authCode,
+                productinfo=productinfo)
 
     td.Create(b'traderflow')
     td.RegisterFront(tdserver)
-    td.SubscribePrivateTopic(2) # 只传送登录后的流内容
-    td.SubscribePrivateTopic(2) # 只传送登录后的流内容
+    td.SubscribePrivateTopic(2)  # 只传送登录后的流内容
+    td.SubscribePrivateTopic(2)  # 只传送登录后的流内容
 
     td.Init()
-    time.sleep(3)
+    time.sleep(10)
 
     # print('当前交易日:'+td.GetTradingDay())
-
+    instrumentsdict = {}
     while True:
         # print(i)
         td.fetch_all_instruments()
         print((len(instruments)))
-        time.sleep(5)
-        instdb = shelve.open('instruments.slv')
+        time.sleep(1)
+        # instdb = shelve.open('instruments.slv')
         while not q_instruments.empty():
             inst = q_instruments.get()
-            print(inst)
+            pprint(inst)
             # inst = to_str(inst)
-            j = to_str(pickle.dumps(inst))
-            instdb[inst.InstrumentID] = j
+            # j = to_str(pickle.dumps(inst))
+            # instdb[inst.InstrumentID] = j
+            instdict = to_dict(inst)
+            instrumentsdict[inst.InstrumentID.decode()] = instdict
 
 
             # instfile.write(str(inst)+'\n')
 
             print((inst.InstrumentName.decode('gbk')))
             print((inst.OptionsType.decode('gbk')))
-            # print(inst.UnderlyingInstrID.decode('gbk'))
 
+
+            #
+            # for j in inst:
+            #     print(j)
+            # print(inst.UnderlyingInstrID.decode('gbk'))
 
             '''
             Instrument(InstrumentID='i2101', ExchangeID='DCE', InstrumentName='\xcc\xfa\xbf\xf3\xca\xaf2101',
@@ -485,18 +547,21 @@ def main():
                        ShortMarginRatio=0.05, MaxMarginSideAlgorithm='0', UnderlyingInstrID='', StrikePrice=0.0,
                        OptionsType='\x00', UnderlyingMultiple=0.0, CombinationType='0')
             '''
-        instdb.close()
+        # instdb.close()
+
+
+        # json_str = json.dumps(instrumentsdict)
+        json_str = json.dumps(instrumentsdict, cls=MyEncoder, ensure_ascii=False)
+        with open('instruments_all_live.json', 'w') as json_file:
+            json_file.write(json_str)
         print('instruments saved....')
         break
-
-
 
         # td.qryPosition()
         # td.QrySettlementInfo()
         # if q_positions:
         #     pos = q_positions.get()
         #     print pos
-
 
 
 if __name__ == "__main__":

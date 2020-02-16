@@ -87,7 +87,7 @@ def workDay():
 def main():
     import json
     import time
-    from getInstrumentsFromFile import get_live_instruments
+    from getInstrumentsFromJsonFile import get_live_instruments
     from data_sewing_machine import sewing_data_to_file_and_depositary
 
     if workDay():
