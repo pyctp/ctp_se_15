@@ -7,7 +7,7 @@ Authon: Tianhm
 
 from ctp15 import TraderApi, ApiStruct
 import shelve
-import cPickle as pickle
+import _pickle as pickle
 
 
 

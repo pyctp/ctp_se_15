@@ -18,6 +18,7 @@ T['ParticipantID'] = 'char[11]' #会员代码
 T['UserID'] = 'char[16]' #用户代码
 T['Password'] = 'char[41]' #密码
 T['ClientID'] = 'char[11]' #交易编码
+T['AppID'] = 'char[30]'
 T['InstrumentID'] = 'char[31]' #合约代码
 T['MarketID'] = 'char[31]' #市场代码
 T['ProductName'] = 'char[21]' #产品名称

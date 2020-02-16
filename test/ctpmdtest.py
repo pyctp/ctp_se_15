@@ -6,7 +6,7 @@ import copy
 try:
 	from queue import Queue
 except:
-	from Queue import Queue
+	from queue import Queue
 
 ticks = []
 tickqueue = Queue()
@@ -21,22 +21,22 @@ class MyMdApi(MdApi):
 
 
     def OnRspError(self, info, RequestId, IsLast):
-        print " Error"
+        print(" Error")
         self.isErrorRspInfo(info)
 
     def isErrorRspInfo(self, info):
         if info.ErrorID != 0:
-            print "ErrorID=", info.ErrorID, ", ErrorMsg=", info.ErrorMsg
+            print("ErrorID=", info.ErrorID, ", ErrorMsg=", info.ErrorMsg)
         return info.ErrorID != 0
 
     def OnFrontDisConnected(self, reason):
-        print "onFrontDisConnected:", reason
+        print("onFrontDisConnected:", reason)
 
     def OnHeartBeatWarning(self, time):
-        print "onHeartBeatWarning", time
+        print("onHeartBeatWarning", time)
 
     def OnFrontConnected(self):
-        print "OnFrontConnected:"
+        print("OnFrontConnected:")
         self.user_login(self.broker_id, self.investor_id, self.passwd)
 
     def user_login(self, broker_id, investor_id, passwd):
@@ -46,16 +46,16 @@ class MyMdApi(MdApi):
         r = self.ReqUserLogin(req, self.requestid)
 
     def OnRspUserLogin(self, userlogin, info, rid, is_last):
-        print "OnRspUserLogin", is_last, info
+        print("OnRspUserLogin", is_last, info)
         if is_last and not self.isErrorRspInfo(info):
-            print "get today's trading day:", repr(self.GetTradingDay())
+            print("get today's trading day:", repr(self.GetTradingDay()))
             self.subscribe_market_data(self.instruments)
 
     def subscribe_market_data(self, instruments):
         self.SubscribeMarketData(instruments)
 
     def OnRspSubMarketData(self, spec_instrument, info, requestid, islast):
-       print "OnRspSubMarketData", spec_instrument
+       print("OnRspSubMarketData", spec_instrument)
 
     # def OnRspUnSubMarketData(self, spec_instrument, info, requestid, islast):
     #    print "OnRspUnSubMarketData"
@@ -125,7 +125,7 @@ def main():
             tick = tickqueue.get()
             sewing_data_to_file_and_depositary(tick)
             numoftick +=1
-            print('tick processed:', tick.UpdateTime, tick.InstrumentID, numoftick)
+            print(('tick processed:', tick.UpdateTime, tick.InstrumentID, numoftick))
 
         else:
             time.sleep(0.5)

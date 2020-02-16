@@ -1,33 +1,51 @@
 #coding:utf-8
 from ctp15 import TraderApi, ApiStruct
 
-import Queue
+import queue
 import time
 import copy
 import datetime
 info = []
-q_server_info = Queue.Queue()
-q_positions = Queue.Queue()
-q_instruments = Queue.Queue()
+q_server_info = queue.Queue()
+q_positions = queue.Queue()
+q_instruments = queue.Queue()
 instruments = []
+
+
+
+def to_str(bytes_or_str):
+    if isinstance(bytes_or_str, bytes):
+        value = bytes_or_str.decode('utf-8')
+    else:
+        value = bytes_or_str
+    return value    #Instance of str
+
+
+def to_bytes(bytes_or_str):
+    if isinstance(bytes_or_str, str):
+        value = bytes_or_str.encode('utf-8')
+    else:
+        value = bytes_or_str
+    return value    #Instance of bytes
+
 
 class Trader(TraderApi):
 
     def __init__(self, broker_id, investor_id, password, appid, authcode, productinfo, request_id=1):
         self.request_id = request_id
-        self.broker_id = broker_id.encode()
-        self.investor_id = investor_id.encode()
-        self.password = password.encode()
-        self.appid = appid.encode()
-        self.authcode = authcode.encode()
+        self.broker_id = broker_id
+        self.investor_id = investor_id
+        self.password = password
+        self.appid = appid
+        self.authcode = authcode
         self.productinfo = productinfo
-        self.q_order = Queue.Queue()
+        self.q_order = queue.Queue()
 
     @staticmethod
     def is_error_rsp_info(info):
         # print info
         if info.ErrorID != 0:
-            print "ErrorID=", info.ErrorID, ", ErrorMsg=", info.ErrorMsg.decode('gbk')
+            print("ErrorID=", info.ErrorID, ", ErrorMsg=", info.ErrorMsg.decode('gbk'))
         return info.ErrorID != 0
 
     def OnRspError(self, pRspInfo, nRequestID, bIsLast):
@@ -40,18 +58,18 @@ class Trader(TraderApi):
         :return:
         """
         if info.ErrorID != 0:
-            print('request_id=%s ErrorID=%d, ErrorMsg=%s',
-                  request_id, info.ErrorID, info.ErrorMsg.decode('gbk'))
+            print(('request_id=%s ErrorID=%d, ErrorMsg=%s',
+                  request_id, info.ErrorID, info.ErrorMsg.decode('gbk')))
         return info.ErrorID != 0
 
     def OnHeartBeatWarning(self, nTimeLapse):
         """心跳超时警告。当长时间未收到报文时，该方法被调用。
         @param nTimeLapse 距离上次接收报文的时间
         """
-        print("on OnHeartBeatWarning time: ", nTimeLapse)
+        print(("on OnHeartBeatWarning time: ", nTimeLapse))
 
     def OnFrontDisconnected(self, nReason):
-        print("on FrontDisConnected disconnected", nReason)
+        print(("on FrontDisConnected disconnected", nReason))
 
     def OnFrontConnected(self):
         print('Front connected....')
@@ -90,10 +108,10 @@ class Trader(TraderApi):
     def OnRspUserLogin(self, pRspUserLogin, pRspInfo, nRequestID, bIsLast):
 
         print('系统登录完成。user login done.')
-        print datetime.datetime.now(), u"登录交易服务器...", bIsLast, pRspInfo.ErrorMsg.decode('gbk')
-        print datetime.datetime.now(), 'user_login:', pRspUserLogin
-        print datetime.datetime.now(), info
-        print datetime.datetime.now(), nRequestID
+        print(datetime.datetime.now(), "登录交易服务器...", bIsLast, pRspInfo.ErrorMsg.decode('gbk'))
+        print(datetime.datetime.now(), 'user_login:', pRspUserLogin)
+        print(datetime.datetime.now(), info)
+        print(datetime.datetime.now(), nRequestID)
 
         q_server_info.put(copy.deepcopy(pRspInfo))
 
@@ -101,14 +119,14 @@ class Trader(TraderApi):
 
         if bIsLast and not self.is_error_rsp_info(pRspInfo):
 
-            print datetime.datetime.now(), u'交易服务器登录成功。', pRspUserLogin.BrokerID, pRspUserLogin.UserID
+            print(datetime.datetime.now(), '交易服务器登录成功。', pRspUserLogin.BrokerID, pRspUserLogin.UserID)
 
             # Logger.info('OnRspUserLogin %s' % is_last)
-            print datetime.datetime.now(), u'请求确认结算单。'
+            print(datetime.datetime.now(), '请求确认结算单。')
             req = ApiStruct.SettlementInfoConfirm(BrokerID=self.broker_id, InvestorID=self.investor_id)
             self.ReqSettlementInfoConfirm(req, self.inc_request_id())
-            print datetime.datetime.now(), 'SettlementInfo Confirm Requested，结算单确认申请已提交.'
-            print datetime.datetime.now(), "get today's trading day:", repr(self.GetTradingDay())
+            print(datetime.datetime.now(), 'SettlementInfo Confirm Requested，结算单确认申请已提交.')
+            print(datetime.datetime.now(), "get today's trading day:", repr(self.GetTradingDay()))
 
         else:
             print('something wrong, connect failed....')
@@ -133,14 +151,14 @@ class Trader(TraderApi):
         #     time.sleep(1)
 
     def OnRspSettlementInfoConfirm(self, pSettlementInfoConfirm, pRspInfo, nRequestID, bIsLast):
-        print(pSettlementInfoConfirm, pRspInfo)
+        print((pSettlementInfoConfirm, pRspInfo))
         """投资者结算结果确认响应"""
-        print datetime.datetime.now(), 'pSettlementInfoConfirm: ', pSettlementInfoConfirm
-        print datetime.datetime.now(), 'pRspInfo: ', pRspInfo, pRspInfo.ErrorMsg.decode('gbk')
-        print datetime.datetime.now(), 'nRequestID: ', nRequestID
-        print datetime.datetime.now(), 'bIsLast: ', bIsLast
+        print(datetime.datetime.now(), 'pSettlementInfoConfirm: ', pSettlementInfoConfirm)
+        print(datetime.datetime.now(), 'pRspInfo: ', pRspInfo, pRspInfo.ErrorMsg.decode('gbk'))
+        print(datetime.datetime.now(), 'nRequestID: ', nRequestID)
+        print(datetime.datetime.now(), 'bIsLast: ', bIsLast)
         info.append(pSettlementInfoConfirm)
-        print u"结算单确认结果,", pRspInfo.ErrorMsg.decode("GBK")
+        print("结算单确认结果,", pRspInfo.ErrorMsg.decode("GBK"))
 
     def inc_request_id(self):
         self.request_id += 1
@@ -159,14 +177,14 @@ class Trader(TraderApi):
         # return 0
     def OnRspQrySettlementInfo(self, pSettlementInfo, pRspInfo, nRequestID, bIsLast):
         """请求查询投资者结算结果响应"""
-        print(u'请求查询投资者结算结果响应...')
+        print('请求查询投资者结算结果响应...')
         if bIsLast:
             print(pSettlementInfo)
 
 
     def OnRspQryInvestor(self, pInvestor, pRspInfo, nRequestID, bIsLast):
-        print(pInvestor, pRspInfo)
-        print pInvestor.InvestorName.decode('gbk'), pInvestor.Address.decode('gbk')
+        print((pInvestor, pRspInfo))
+        print(pInvestor.InvestorName.decode('gbk'), pInvestor.Address.decode('gbk'))
 
     def OnRtnOrder(self, pOrder):
         ''' 报单通知
@@ -179,17 +197,17 @@ class Trader(TraderApi):
 
         # print repr(pOrder)
 
-        self.logger.info(u'报单响应,Order=%s' % str(pOrder))
+        self.logger.info('报单响应,Order=%s' % str(pOrder))
         # print pOrder
         if pOrder.OrderStatus == 'a':
             # CTP接受，但未发到交易所
             # print u'CTP接受Order，但未发到交易所, BrokerID=%s,BrokerOrderSeq = %s,TraderID=%s, OrderLocalID=%s' % (pOrder.BrokerID, pOrder.BrokerOrderSeq, pOrder.TraderID, pOrder.OrderLocalID)
-            self.logger.info(u'TD:CTP接受Order，但未发到交易所, BrokerID=%s,BrokerOrderSeq = %s,TraderID=%s, OrderLocalID=%s' % (
+            self.logger.info('TD:CTP接受Order，但未发到交易所, BrokerID=%s,BrokerOrderSeq = %s,TraderID=%s, OrderLocalID=%s' % (
                 pOrder.BrokerID, pOrder.BrokerOrderSeq, pOrder.TraderID, pOrder.OrderLocalID))
             # self.agent.rtn_order(pOrder)
         else:
             # print u'交易所接受Order,exchangeID=%s,OrderSysID=%s,TraderID=%s, OrderLocalID=%s' % (pOrder.ExchangeID, pOrder.OrderSysID, pOrder.TraderID, pOrder.OrderLocalID)
-            self.logger.info(u'TD:交易所接受Order,exchangeID=%s,OrderSysID=%s,TraderID=%s, OrderLocalID=%s' % (
+            self.logger.info('TD:交易所接受Order,exchangeID=%s,OrderSysID=%s,TraderID=%s, OrderLocalID=%s' % (
                 pOrder.ExchangeID, pOrder.OrderSysID, pOrder.TraderID, pOrder.OrderLocalID))
             # self.agent.rtn_order_exchange(pOrder)
             # self.agent.rtn_order(pOrder)
@@ -197,10 +215,10 @@ class Trader(TraderApi):
     def OnRtnTrade(self, pTrade):
         '''成交通知'''
         self.logger.info(
-            u'TD:成交通知,BrokerID=%s,BrokerOrderSeq = %s,exchangeID=%s,OrderSysID=%s,TraderID=%s, OrderLocalID=%s' % (
+            'TD:成交通知,BrokerID=%s,BrokerOrderSeq = %s,exchangeID=%s,OrderSysID=%s,TraderID=%s, OrderLocalID=%s' % (
                 pTrade.BrokerID, pTrade.BrokerOrderSeq, pTrade.ExchangeID, pTrade.OrderSysID, pTrade.TraderID,
                 pTrade.OrderLocalID))
-        self.logger.info(u'TD:成交回报,Trade=%s' % repr(pTrade))
+        self.logger.info('TD:成交回报,Trade=%s' % repr(pTrade))
         pt = deepcopy(pTrade)
         # print u'报单成交：', pt.UserID, pt.InstrumentID, pt.Direction, pt.OffsetFlag, pt.Price
         q_rtn_trade.put(pt)
@@ -275,7 +293,7 @@ class Trader(TraderApi):
             获取合约的当前持仓明细，目前没用
         '''
         # logging.info(u'A:获取合约%s的当前持仓..' % (instrument_id,))
-        print
+        print()
         'get posi'
         req = ApiStruct.QryInvestorPositionDetail(BrokerID=self.broker_id, InvestorID=self.investor_id,
                                                   InstrumentID=instrument_id)
@@ -289,27 +307,27 @@ class Trader(TraderApi):
                                                 HedgeFlag=ApiStruct.HF_Speculation
                                                 )
         r = self.trader.ReqQryInstrumentMarginRate(req, self.inc_request_id())
-        logging.info(u'A:查询保证金率, 函数发出返回值:%s' % r)
+        logging.info('A:查询保证金率, 函数发出返回值:%s' % r)
 
     def fetch_all_instruments(self):
         # req = ApiStruct.QryInstrument(InstrumentID=instrument_id)
         req = ApiStruct.QryInstrument()
         time.sleep(1)
         r = self.ReqQryInstrument(req, self.inc_request_id())
-        print(u'A:查询合约, 函数发出返回值:%s' % r)
+        print(('A:查询合约, 函数发出返回值:%s' % r))
 
     def fetch_instrument(self, instrument_id):
         req = ApiStruct.QryInstrument(InstrumentID=instrument_id)
         # req = ApiStruct.QryInstrument()
         time.sleep(1)
         r = self.ReqQryInstrument(req, self.inc_request_id())
-        print(u'A:查询合约, 函数发出返回值:%s' % r)
+        print(('A:查询合约, 函数发出返回值:%s' % r))
 
     def rsp_qry_position(self, position):
         '''
             查询持仓回报, 每个合约最多得到4个持仓回报，历史多/空、今日多/空
         '''
-        logging.info(u'agent 持仓:%s' % str(position))
+        logging.info('agent 持仓:%s' % str(position))
         if position != None:
             cur_position = self.instruments[position.InstrumentID].position
             if position.PosiDirection == ApiStruct.PD_Long:
@@ -349,7 +367,7 @@ class Trader(TraderApi):
         '''
 
         if pinstrument.InstrumentID not in self.instruments:
-            logging.warning(u'A_RQI:收到未监控的合约查询:%s' % (pinstrument.InstrumentID))
+            logging.warning('A_RQI:收到未监控的合约查询:%s' % (pinstrument.InstrumentID))
             return
         self.instruments[pinstrument.InstrumentID].multiple = pinstrument.VolumeMultiple
         self.instruments[pinstrument.InstrumentID].tick_base = int(pinstrument.PriceTick * 10 + 0.1)
@@ -362,7 +380,7 @@ class Trader(TraderApi):
             查询持仓明细回报, 得到每一次成交的持仓,其中若已经平仓,则持量为0,平仓量>=1
             必须忽略
         '''
-        print str(position_detail)
+        print(str(position_detail))
         self.check_qry_commands()
 
     def rsp_qry_order(self, sorder):
@@ -390,12 +408,12 @@ class Trader(TraderApi):
         instruments.append(copy.deepcopy(pInstrument))
         q_instruments.put(copy.deepcopy(pInstrument))
         # print(pInstrument)
-        print(pInstrument.InstrumentName.decode('gbk'))
-        print(pInstrument.InstrumentID)
+        print((pInstrument.InstrumentName.decode('gbk')))
+        print((pInstrument.InstrumentID))
         if bIsLast:
             print('done...')
 def main():
-    import cPickle as pickle
+    import pickle as pickle
     import shelve
     import json
     from ctpmdtest import workDay
@@ -416,10 +434,17 @@ def main():
     authCode = acctinfo['authCode']
     productinfo = acctinfo['productinfo']
 
+    broker_id = to_bytes(broker_id)
+    password = to_bytes(password)
+    appID = to_bytes(appID)
+    tdserver = to_bytes(tdserver)
+    authCode = to_bytes(authCode)
+    productinfo = to_bytes(productinfo)
+    investor_id = to_bytes(investor_id)
 
     td = Trader(broker_id=broker_id, investor_id=investor_id, password=password, appid=appID, authcode=authCode, productinfo = productinfo)
 
-    td.Create(r'./tmp/'+'traderflow')
+    td.Create(b'traderflow')
     td.RegisterFront(tdserver)
     td.SubscribePrivateTopic(2) # 只传送登录后的流内容
     td.SubscribePrivateTopic(2) # 只传送登录后的流内容
@@ -427,28 +452,26 @@ def main():
     td.Init()
     time.sleep(3)
 
-    print('当前交易日:'+td.GetTradingDay())
+    # print('当前交易日:'+td.GetTradingDay())
 
     while True:
-
-        # if info:
-        #     for i in info:
-        #         print(i)
+        # print(i)
         td.fetch_all_instruments()
-        print(len(instruments))
+        print((len(instruments)))
         time.sleep(5)
         instdb = shelve.open('instruments.slv')
         while not q_instruments.empty():
             inst = q_instruments.get()
             print(inst)
-            j = pickle.dumps(inst)
+            # inst = to_str(inst)
+            j = to_str(pickle.dumps(inst))
             instdb[inst.InstrumentID] = j
 
 
             # instfile.write(str(inst)+'\n')
 
-            print(inst.InstrumentName.decode('gbk'))
-            print(inst.OptionsType.decode('gbk'))
+            print((inst.InstrumentName.decode('gbk')))
+            print((inst.OptionsType.decode('gbk')))
             # print(inst.UnderlyingInstrID.decode('gbk'))
 
 
