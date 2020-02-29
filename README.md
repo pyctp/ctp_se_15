@@ -26,3 +26,5 @@ sudo chmod o+r /sys/firmware/dmi/tables/DMI
 即可。
 
 api 测试程序 已经移到 test 目录下面。
+
+new：支持python 3.7.4， 64位的版本单独起了一个新仓库，ctp_se_15_py3, 已经编译通过。
